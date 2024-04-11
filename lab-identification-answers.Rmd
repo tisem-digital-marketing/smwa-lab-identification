@@ -1,0 +1,317 @@
+---
+title: "My answers"
+author: "My name"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+output: 
+  #unilur::answer_rmd: default
+  #unilur::tutorial_pdf: default
+  unilur::tutorial_html_solution: default
+---
+
+## Motivation
+
+TBD
+
+## Learning Goals
+
+By the end of this tutorial you will be able to:
+
+1. Estimate conditional means via linear regression
+2. Explain why adding a control variable to a regression aids in the identification of regression parameters
+3. Simulate multiple datasets from a DGP and estimate regression models across each dataset
+4. Evaluate which regression model performs best at estimating a causal effect using simulations as evidence.
+5. Create a research question to that helps to answer a business decision.
+6. Design a Randomized Control Trial to answer a research question.
+
+## Instructions to Students
+
+These lab assignments are **not graded**, but we encourage you to invest time and effort into working through them from start to finish.
+Add your solutions to the `lab-identification-answers.Rmd` file as you work through the exercises so that you have a record of the work you have done.
+
+Obtain a copy of both the question and answer files using Git.
+To clone a copy of this repository to your own PC, use the following command:
+
+```{bash, eval = FALSE}
+git clone https://github.com/tisem-digital-marketing/smwa-lab-identification-experiments.git
+```
+
+Once you have your copy, open the answer document in RStudio as an RStudio project and work through the questions.
+
+The goal of the tutorials is to explore how to "do" the technical side of social media analytics.
+Use this as an opportunity to push your limits and develop new skills.
+When you are uncertain or do not know what to do next - ask questions of your peers and the instructors on the class Slack workspace.
+
+You will need to load the following `R` libraries to complete the exercises:
+
+```{r}
+library(readr)
+library(dplyr)
+library(broom)
+library(ggplot2)
+library(ggthemes)
+library(rsample)
+library(tidyr)
+library(tibble)
+library(purrr)
+library(car)
+library(janitor)
+```
+
+You may need to install some of these if they are not already on your machine.
+
+## Part 1: Regression as Conditional Mean Estimation
+
+In this exercise we will work with the same data as in the "The Design of Empirical Research" slides. 
+Recall that we had a data generating process that was defined by the following rules:
+
+1. Income is log-normally distributed
+2. Being brown-haired gives you a 10% income boost
+3. 20% of people are naturally brown-haired
+4. Having a college degree gives you a 20% income boost
+5. 30% of people have college degrees
+6. 40% of people who don’t have brown hair or a college degree will choose to dye their hair brown
+
+The dataset `hair.csv` in the `data/` directory contains this data set.
+
+1. Load the dataset into R.
+
+```{r, solution = TRUE}
+df <- 
+    read_csv("data/hair.csv") %>%
+    # for snakecase names
+    clean_names() %>%
+    # for ease later
+    mutate(hair = as.factor(hair))
+```
+
+2. Let's recreate the group summary statistics from the lecture:
+    (a) Report the average log income for Brown haired individuals and for individuals with other color hair using all the data
+    (b) Report the average log income for Brown haired individuals and for individuals with other color hair using only individuals who went to college.
+    (c) Explain why the difference in means in (a) and (b) are different and which of the two approaches you prefer
+
+```{r, solution = TRUE}
+# (a)
+df %>%
+    group_by(hair) %>%
+    summarise(income = round(mean(log_income) , 2))
+
+# (b)
+df %>%
+    filter(college) %>%
+    group_by(hair) %>%
+    summarise(income = round(mean(log_income) , 2))
+
+# (c) see lecture notes
+```
+Now let's consider the following linear regression equation:
+
+$$
+\text{log_income}_i = \beta_0 + \beta_1 1[\text{Hair Color = Brown}]_i + \varepsilon_i
+$$
+where $1[\text{Hair Color = Brown}]_i$ is a variable that takes the value 1 if an individual has brown hair, and the value 0 otherwise. $\varepsilon_i$ is the regression error term which has $E(\varepsilon_i) =0$.  
+    
+3. Show that running the regression above using all the data returns the conditional means from 2(a). 
+
+HINT: You may need to modify the `hair` variable to make it a factor variable before running the regression. You may also need to use the function `relevel(variable_name, ref = some_number)` in your code so that the regression returns the coefficients you need.
+
+```{r, solution=TRUE}
+mod_1 <- lm(log_income ~ relevel(hair, ref = 2), data = df)
+tidy(mod_1)
+# note to TA: relate this back algaebraically to conditional means from the regression equation
+```
+
+4. Show that running the regression above using data from students who went to college returns the conditional means from 2(b).
+
+```{r, solution=TRUE}
+mod_2 <- lm(log_income ~ relevel(hair, ref = 2), data = df %>% filter(college == TRUE))
+tidy(mod_2)
+# note to TA: relate this back algaebraically to conditional means from the regression equation
+```
+
+5. A colleague suggests that estimating the regression:
+$$
+\text{log_income}_i = \beta_0 + \beta_1 1[\text{Hair Color = Brown}]_i + \beta_2 1[\text{Been to College}]_i + \varepsilon_i
+$$
+where $1[\text{Been to College}]_i$ is a variable that takes the value 1 if an individual has been to college, and the value 0 otherwise, on *all* of the data as an alternative to the apporach in (4). Estimate this model and report the results.
+```{r, solution=TRUE}
+mod_3 <- lm(log_income ~ relevel(hair, ref = 2) + college, data = df)
+tidy(mod_3)
+```
+
+6. Show that for the regression models in (4) and (5) you fail to reject the hypothesis that $\hat{\beta}_1 = 0.1$.
+
+HINTS: 
+
+* Use the `linearHypothesis()` function
+* You may want to also use the `matchCoefs()` function
+
+```{r, solution=TRUE}
+linearHypothesis(mod_1, matchCoefs(mod_1, "hair"), rhs = 0.1)
+linearHypothesis(mod_2, matchCoefs(mod_2, "hair"), rhs = 0.1)
+linearHypothesis(mod_3, matchCoefs(mod_3, "hair"), rhs = 0.1)
+```
+7. After showing your colleague the results in (5) and (6) he says the following:
+
+> "Adding the college indicator as a control variable allows you to use the *right* variation in the regression model to identify the effect of brown hair on income."
+
+Explain what they mean by this statement.
+
+```{block, solution = TRUE}
+What does controlling for college do?
+
+* Allows us to look at relationship between hair color and income among people with the same level of college
+* which is the variation in log income that we want ...
+* ... how log income varies 
+* ... among people in college
+* (... because they aren't the ones faking it by dying their hair)
+
+```
+
+
+8. Now we have our three estimates of the return to brown hair via regression.
+Those from (5) and (6) seem to give us "good" estimates in this particular example, but we might be worried that this is an artefact of the one dataset that we have. 
+Similar to what we did in lecture, lets simulate 1000 data sets and compute the three estimates each time to compare their performance.
+    (a) Write a function `sim_data()` that will simulate one dataset that obeys the DGP. We've sketched out a template for you to start from.
+    (b) Set a seed, and then use the code below to create 1000 datasets.
+    (c) For each dataset the code below will estimate each of the regression models for you, and return the estimates. Run it!
+    (d) Plot the density of the estimated coefficients for each of the three models using the starter code provided and filling where we write "YOUR_CODE_HERE" with the correct code or variable name.
+    (e) Which regression model is the "best" one of the three across the one thousand estimates. Explain why.
+
+```{r, eval = FALSE}
+# If you want to run this code when you "knit" the script, replace eval=FALSE with eval=TRUE.
+
+# (a)
+sim_data = function(){
+    df <- 
+        YOUR_CODE_HERE %>%
+        mutate(hair = as.factor(hair))
+    return(df)
+}
+
+# (b)
+set.seed(YOUR_SEED)
+all_samples <- tibble::enframe(replicate(n = 1000, 
+                                      sim_data(), 
+                                      simplify = FALSE)
+)
+
+# (c)
+model_output <-
+    all_samples %>%
+    mutate(mod_1 = purrr::map(value, 
+                            ~tidy(lm(log_income ~ relevel(hair, ref = 2), data = .x),
+                                  conf.int = TRUE) %>%
+                                filter(stringr::str_detect(term, 'hair'))
+                            ),
+           mod_2 = purrr::map(value, 
+                           ~tidy(lm(log_income ~ relevel(hair, ref = 2), data = .x %>% filter(college == TRUE)),
+                                 conf.int = TRUE) %>%
+                               filter(stringr::str_detect(term, 'hair'))
+                           ),
+           mod_3 = purrr::map(value, 
+                            ~tidy(lm(log_income ~ relevel(hair, ref = 2) + college, data = .x),
+                                  conf.int = TRUE)%>%
+                                filter(stringr::str_detect(term, 'hair'))
+           )
+    ) %>%
+    unnest(c(mod_1, mod_2, mod_3),
+                  names_sep = "_") 
+
+# (d)
+YOUR_CODE %>%
+    ggplot() +
+    # model 1 estimates
+    stat_density(aes(x=YOUR_CODE_HERE), geom = 'line', color = "blue") +
+    # model 2 estimates
+    stat_density(aes(x=YOUR_CODE_HERE), geom = 'line', color = "purple") +
+    # model 3 estimates
+    stat_density(aes(x=YOUR_CODE_HERE), geom = 'line', color = "orange") +
+    xlab("YOUR_X_LABEL") +
+    theme_bw()
+```
+
+```{r, solution=TRUE, cache = TRUE}
+# Simulation
+# function to simulate data
+sim_data = function(){
+    df <- 
+        tibble(college = runif(5000) < .3) %>%
+        mutate(hair = case_when(
+            runif(5000) < .2+.8*.4*(!college) ~ "Brown",
+            TRUE ~ "Other Color"
+        ),
+        log_income = .1*(hair == "Brown") + 
+            .2*college + rnorm(5000) + 5 
+        ) %>%
+        mutate(hair = as.factor(hair))
+    return(df)
+}
+
+# Simulate it!
+set.seed(42)
+all_samples <- tibble::enframe(replicate(n = 1000, 
+                                      sim_data(), 
+                                      simplify = FALSE)
+)
+
+model_output <-
+    all_samples %>%
+    mutate(mod_1 = purrr::map(value, 
+                            ~tidy(lm(log_income ~ relevel(hair, ref = 2), data = .x),
+                                  conf.int = TRUE) %>%
+                                filter(stringr::str_detect(term, 'hair'))
+                            ),
+           mod_2 = purrr::map(value, 
+                           ~tidy(lm(log_income ~ relevel(hair, ref = 2), data = .x %>% filter(college == TRUE)),
+                                 conf.int = TRUE) %>%
+                               filter(stringr::str_detect(term, 'hair'))
+                           ),
+           mod_3 = purrr::map(value, 
+                            ~tidy(lm(log_income ~ relevel(hair, ref = 2) + college, data = .x),
+                                  conf.int = TRUE)%>%
+                                filter(stringr::str_detect(term, 'hair'))
+           )
+    ) %>%
+    tidyr::unnest(c(mod_1, mod_2, mod_3),
+                  names_sep = "_") 
+
+model_output %>%
+    ggplot() +
+    stat_density(aes(x=mod_1_estimate), geom = 'line',  color = "blue") +
+    stat_density(aes(x=mod_2_estimate), geom = 'line',  color = "purple") +
+    stat_density(aes(x=mod_3_estimate), geom = 'line',  color = "orange") +
+    xlab("Coefficient Estimate") +
+    theme_bw()
+
+```
+
+## Part 2: Designing a Randomized Control Trial
+
+You are approached by Bol.com to help them work on a business problem they are facing.
+They provide the following brief:
+
+> Bol.com’s Seller Experience team is looking to expand the number of third party vendors who sell on the site. One problem they are facing is that new vendors have less, and noisier reviews by consumers about their reputation. As a result, third party sellers get less orders and many leave the platform within a few months. The Seller Experience team wants to design an experiment that introduces something new to the platform that helps third party sellers more readily gain reputation when they first join the platform.
+
+1. Identify the business/marketing problem, and why it is relevant.
+
+Write your answer here
+
+2. State the main research question(s) that you needs to answer. Explain why this question is "good" using the criteria introduced in lectures.
+
+Write your answer here
+
+3. List three potential marketing intervention(s) can you introduce to aid new third party sellers. 
+
+Write your answer here
+
+4. Identify one of the interventions from (3) and intuitively explain how you would design a Randomized Control Trial to evaluate its effectiveness.
+
+Write your answer here
+
+5. Explain what data would you need to have returned to your from the experiment in order to answer the research question.
+
+Write your answer here
+
+6. Outline the statistical analysis you would need to do to answer the research question with the data at hand.
+
+Write your answer here
