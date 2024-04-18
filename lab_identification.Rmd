@@ -3,14 +3,10 @@ title: "My answers"
 author: "My name"
 date: '`r format(Sys.time(), "%d %B, %Y")`'
 output: 
-  #unilur::answer_rmd: default
+  unilur::answer_rmd: default
   #unilur::tutorial_pdf: default
   unilur::tutorial_html_solution: default
 ---
-
-## Motivation
-
-TBD
 
 ## Learning Goals
 
@@ -26,7 +22,7 @@ By the end of this tutorial you will be able to:
 ## Instructions to Students
 
 These lab assignments are **not graded**, but we encourage you to invest time and effort into working through them from start to finish.
-Add your solutions to the `lab-identification-answers.Rmd` file as you work through the exercises so that you have a record of the work you have done.
+Add your solutions to the `lab_identification.Rmd` file as you work through the exercises so that you have a record of the work you have done.
 
 Obtain a copy of both the question and answer files using Git.
 To clone a copy of this repository to your own PC, use the following command:
@@ -43,7 +39,7 @@ When you are uncertain or do not know what to do next - ask questions of your pe
 
 You will need to load the following `R` libraries to complete the exercises:
 
-```{r}
+```{r, message = FALSE}
 library(readr)
 library(dplyr)
 library(broom)
