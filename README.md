@@ -25,7 +25,7 @@ $ cd your/path/to/smwa-material
 3. Clone a copy of this repository:
 
 ```{bash, eval = FALSE}
-git clone https://github.com/tisem-digital-marketing/smwa-lab-identification-experimentation.git
+git clone https://github.com/tisem-digital-marketing/smwa-lab-identification.git
 ```
 
 Once you have cloned the files, open the cloned repository in RStudio as an RStudio project and work through the questions.
