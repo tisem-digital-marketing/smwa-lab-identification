@@ -19,7 +19,7 @@ By the end of this tutorial you will be able to:
 ## Instructions to Students
 
 These lab assignments are **not graded**, but we encourage you to invest time and effort into working through them from start to finish.
-Add your solutions to the `lab_identification.Rmd` file as you work through the exercises so that you have a record of the work you have done.
+Add your solutions to the `lab_identification_answer.Rmd` file as you work through the exercises so that you have a record of the work you have done.
 
 Obtain a copy of both the question and answer files using Git.
 To clone a copy of this repository to your own PC, use the following command:
