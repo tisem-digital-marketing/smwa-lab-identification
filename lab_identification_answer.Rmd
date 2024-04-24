@@ -145,8 +145,57 @@ Similar to what we did in lecture, lets simulate 1000 data sets and compute the 
     (e) Which regression model is the "best" one of the three across the one thousand estimates. Explain why.
 
 
-```{r}
-# Write your answer here
+```{r, eval = FALSE}
+# If you want to run this code when you "knit" the script, replace eval=FALSE with eval=TRUE.
+
+# (a)
+sim_data = function(){
+    df <- 
+        YOUR_CODE_HERE %>%
+        mutate(hair = as.factor(hair))
+    return(df)
+}
+
+# (b)
+set.seed(YOUR_SEED)
+all_samples <- tibble::enframe(replicate(n = 1000, 
+                                      sim_data(), 
+                                      simplify = FALSE)
+)
+
+# (c)
+model_output <-
+    all_samples %>%
+    mutate(mod_1 = purrr::map(value, 
+                            ~tidy(lm(log_income ~ relevel(hair, ref = 2), data = .x),
+                                  conf.int = TRUE) %>%
+                                filter(stringr::str_detect(term, 'hair'))
+                            ),
+           mod_2 = purrr::map(value, 
+                           ~tidy(lm(log_income ~ relevel(hair, ref = 2), data = .x %>% filter(college == TRUE)),
+                                 conf.int = TRUE) %>%
+                               filter(stringr::str_detect(term, 'hair'))
+                           ),
+           mod_3 = purrr::map(value, 
+                            ~tidy(lm(log_income ~ relevel(hair, ref = 2) + college, data = .x),
+                                  conf.int = TRUE)%>%
+                                filter(stringr::str_detect(term, 'hair'))
+           )
+    ) %>%
+    unnest(c(mod_1, mod_2, mod_3),
+                  names_sep = "_") 
+
+# (d)
+YOUR_CODE %>%
+    ggplot() +
+    # model 1 estimates
+    stat_density(aes(x=YOUR_CODE_HERE), geom = 'line', color = "blue") +
+    # model 2 estimates
+    stat_density(aes(x=YOUR_CODE_HERE), geom = 'line', color = "purple") +
+    # model 3 estimates
+    stat_density(aes(x=YOUR_CODE_HERE), geom = 'line', color = "orange") +
+    xlab("YOUR_X_LABEL") +
+    theme_bw()
 ```
 
 
