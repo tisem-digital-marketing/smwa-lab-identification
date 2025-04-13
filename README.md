@@ -1,14 +1,14 @@
 # Social Media and Web Analytics Lab: Identification and Experimentation
 
-[![lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
+[![lifecycle](https://img.shields.io/badge/lifecycle-stable-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 [![lifecycle](https://img.shields.io/badge/version-2024-red.svg)]()
 
 ## Meta-Information
 
 * Module Maintainer: Lachlan Deer (`@lachlandeer`)
-* Course: [Social Media and Web Analytics](https://tisem-digital-marketing.github.io/2024-smwa)
+* Course: [Social Media and Web Analytics](https://tisem-digital-marketing.github.io/2025-smwa)
 * Institute: Dept of Marketing, Tilburg University
-* Current Version: [2024 edition](https://tisem-digital-marketing.github.io/2024-smwa)
+* Current Version: [2025 edition](https://tisem-digital-marketing.github.io/2025-smwa)
 
 ## Instructions for Students
 
@@ -37,13 +37,13 @@ This work is licensed under a [Creative Commons Attribution-ShareAlike 4.0 Inter
 
 ## Suggested Citation
 
-Deer, Lachlan. 2024. Social Media and Web Analytics: Identification. Tilburg University. url = "https://github.com/deer-marketing-lab/smwa-lab-identification-experimentation"
+Deer, Lachlan. 2025. Social Media and Web Analytics: Identification. Tilburg University. url = "https://github.com/deer-marketing-lab/smwa-lab-identification-experimentation"
 
 ```{r, engine='out', eval = FALSE}
 @misc{smwa-lab-identification,
       title={"Social Media and Web Analytics Lab: Identification and Experimentation"},
       author={Lachlan Deer},
-      year={2024},
+      year={2025},
       url = "https://github.com/deer-marketing-lab/smwa-lab-identification-experimentation"
 }
 ```
